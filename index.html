@@ -201,8 +201,11 @@
 
   function bounce() {
     if (!bouncing) return;
-    const maxX = window.innerWidth - elW;
-    const maxY = window.innerHeight - elH;
+    // Re-measure every frame in case font loaded late and changed dimensions
+    elW = el.offsetWidth;
+    elH = el.offsetHeight;
+    const maxX = Math.max(0, window.innerWidth  - elW);
+    const maxY = Math.max(0, window.innerHeight - elH);
 
     x += vx;
     y += vy;
@@ -211,6 +214,10 @@
     if (x >= maxX) { x = maxX; vx = -Math.abs(vx); onBounce(); }
     if (y <= 0)    { y = 0;    vy = Math.abs(vy);  onBounce(); }
     if (y >= maxY) { y = maxY; vy = -Math.abs(vy); onBounce(); }
+
+    // Clamp position to always stay in bounds
+    x = Math.min(Math.max(0, x), maxX);
+    y = Math.min(Math.max(0, y), maxY);
 
     el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
     requestAnimationFrame(bounce);
