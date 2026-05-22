@@ -29,9 +29,7 @@
       display: none;
     }
 
-    .slide.active {
-      display: block;
-    }
+    .slide.active { display: block; }
 
     #overlay {
       position: fixed;
@@ -58,6 +56,55 @@
       letter-spacing: -0.01em;
       text-shadow: 0 2px 60px rgba(0,0,0,0.4);
     }
+
+    /* ── Mute button ───────────────────────────────────── */
+    #mute-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 30;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(15, 15, 15, 0.55);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      box-shadow:
+        0 4px 24px rgba(0,0,0,0.45),
+        0 1px 0 rgba(255,255,255,0.08) inset,
+        0 -1px 0 rgba(0,0,0,0.3) inset;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, transform 0.15s;
+      animation: liquid-pulse 2s ease-in-out infinite;
+    }
+
+    #mute-btn:hover {
+      background: rgba(30, 30, 30, 0.7);
+      transform: scale(1.06);
+    }
+
+    #mute-btn:active { transform: scale(0.95); }
+
+    #mute-btn svg {
+      width: 22px;
+      height: 22px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    #mute-btn.unlocked {
+      animation: none;
+    }
+
+    @keyframes liquid-pulse {
+      0%   { box-shadow: 0 4px 24px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.08) inset, 0 0 0 0 rgba(255,255,255,0.35); }
+      60%  { box-shadow: 0 4px 24px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.08) inset, 0 0 0 14px rgba(255,255,255,0); }
+      100% { box-shadow: 0 4px 24px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.08) inset, 0 0 0 0 rgba(255,255,255,0); }
+    }
   </style>
 </head>
 <body>
@@ -76,6 +123,21 @@
 
 <div id="overlay"></div>
 <div id="heading"><h1>hitsfromthebong</h1></div>
+
+<button id="mute-btn" aria-label="Unmute">
+  <!-- Sound on icon -->
+  <svg id="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+  </svg>
+  <!-- Muted icon (hidden by default) -->
+  <svg id="icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+    <line x1="23" y1="9" x2="17" y2="15"/>
+    <line x1="17" y1="9" x2="23" y2="15"/>
+  </svg>
+</button>
 
 <script>
   // ── Slides ─────────────────────────────────────────────
@@ -96,20 +158,34 @@
   });
   let soundIndex = 0;
   let audioUnlocked = false;
+  let muted = false;
+
+  const btn       = document.getElementById('mute-btn');
+  const iconOn    = document.getElementById('icon-on');
+  const iconOff   = document.getElementById('icon-off');
 
   function unlockAudio() {
     if (audioUnlocked) return;
     audioUnlocked = true;
-    document.removeEventListener('click', unlockAudio);
-    document.removeEventListener('touchstart', unlockAudio);
+    btn.classList.add('unlocked');
+    btn.setAttribute('aria-label', 'Mute');
   }
-  document.addEventListener('click', unlockAudio);
-  document.addEventListener('touchstart', unlockAudio);
+
+  btn.addEventListener('click', () => {
+    if (!audioUnlocked) {
+      unlockAudio();
+      return;
+    }
+    muted = !muted;
+    iconOn.style.display  = muted ? 'none'  : '';
+    iconOff.style.display = muted ? ''      : 'none';
+    btn.setAttribute('aria-label', muted ? 'Unmute' : 'Mute');
+  });
 
   // Called on every wall hit — advances both sound and bg in sync
   function onBounce() {
     nextSlide();
-    if (!audioUnlocked) return;
+    if (!audioUnlocked || muted) return;
     const s = sounds[soundIndex % sounds.length];
     s.currentTime = 0;
     s.play().catch(() => {});
