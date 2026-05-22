@@ -65,21 +65,20 @@
 
     #play-btn {
       font-family: 'Cossette Titre', serif;
-      font-size: clamp(0.85rem, 2vw, 1.1rem);
+      font-size: clamp(1.7rem, 4vw, 2.2rem);
       letter-spacing: 0.3em;
       color: #fff;
       background: #000;
-      border: 1px solid rgba(255,255,255,0.5);
+      border: none;
       padding: clamp(8px, 1.2vw, 12px) clamp(24px, 4vw, 48px);
       cursor: pointer;
-      transition: background 0.25s, color 0.25s, border-color 0.25s;
+      transition: background 0.25s, color 0.25s;
       animation: play-pulse 2s ease-in-out infinite;
     }
 
     #play-btn.inverted {
       background: #fff;
       color: #000;
-      border-color: #fff;
       animation: none;
     }
 
@@ -89,13 +88,13 @@
     }
 
     @keyframes play-pulse {
-      0%,100% { transform: scaleX(1); }
-      50%     { transform: scaleX(3); }
+      0%,100% { transform: scaleX(1)    scaleY(1); }
+      50%     { transform: scaleX(3)    scaleY(2); }
     }
 
     @keyframes play-text-counter {
-      0%,100% { transform: scaleX(1); }
-      50%     { transform: scaleX(0.333); }
+      0%,100% { transform: scaleX(1)     scaleY(1); }
+      50%     { transform: scaleX(0.333) scaleY(0.5); }
     }
 
     /* ── Bouncing heading ──────────────────────────────── */
@@ -137,7 +136,6 @@
 <div id="overlay"></div>
 
 <div id="intro">
-  <h1>hitsfromthebong</h1>
   <button id="play-btn"><span>PLAY</span></button>
 </div>
 
