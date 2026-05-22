@@ -100,17 +100,11 @@
   function unlockAudio() {
     if (audioUnlocked) return;
     audioUnlocked = true;
-    sounds.forEach(a => { a.play().then(() => a.pause()).catch(() => {}); });
-    sounds[0].currentTime = 0;
-    sounds[0].play().catch(() => {});
-    soundIndex = 1;
     document.removeEventListener('click', unlockAudio);
     document.removeEventListener('touchstart', unlockAudio);
-    document.removeEventListener('keydown', unlockAudio);
   }
   document.addEventListener('click', unlockAudio);
   document.addEventListener('touchstart', unlockAudio);
-  document.addEventListener('keydown', unlockAudio);
 
   // Called on every wall hit — advances both sound and bg in sync
   function onBounce() {
@@ -124,7 +118,7 @@
 
   // ── DVD bounce ─────────────────────────────────────────
   const el = document.getElementById('heading');
-  const SPEED = 1.5;
+  const SPEED = 3.5;
   let x, y, vx, vy;
 
   function init() {
