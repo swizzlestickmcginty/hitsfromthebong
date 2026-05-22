@@ -31,6 +31,14 @@
 
     .slide.active { z-index: 1; }
 
+    #loader {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 50;
+      pointer-events: none;
+    }
+
     #overlay {
       position: fixed;
       inset: 0;
@@ -92,16 +100,19 @@
 <body>
 
 <div id="slideshow">
-  <div class="slide active" style="background-image: url('images/1.gif');"></div>
-  <div class="slide"        style="background-image: url('images/2.jpg');"></div>
-  <div class="slide"        style="background-image: url('images/3.gif');"></div>
-  <div class="slide"        style="background-image: url('images/4.jpg');"></div>
-  <div class="slide"        style="background-image: url('images/5.jpg');"></div>
-  <div class="slide"        style="background-image: url('images/6.jpg');"></div>
-  <div class="slide"        style="background-image: url('images/7.png');"></div>
-  <div class="slide"        style="background-image: url('images/8.jpg');"></div>
-  <div class="slide"        style="background-image: url('images/9.jpg');"></div>
+  <div class="slide active" data-bg="images/1.gif"></div>
+  <div class="slide"        data-bg="images/2.jpg"></div>
+  <div class="slide"        data-bg="images/3.gif"></div>
+  <div class="slide"        data-bg="images/4.jpg"></div>
+  <div class="slide"        data-bg="images/5.jpg"></div>
+  <div class="slide"        data-bg="images/6.jpg"></div>
+  <div class="slide"        data-bg="images/7.png"></div>
+  <div class="slide"        data-bg="images/8.jpg"></div>
+  <div class="slide"        data-bg="images/9.jpg"></div>
 </div>
+
+<!-- Black screen until first image is ready -->
+<div id="loader"></div>
 
 <div id="overlay"></div>
 
@@ -114,12 +125,33 @@
 <script>
   // ── Slides ─────────────────────────────────────────────
   const slides = document.querySelectorAll('.slide');
+  const loader = document.getElementById('loader');
   let slideIndex = 0;
+
+  function loadSlide(index) {
+    const s = slides[index];
+    if (!s.style.backgroundImage) {
+      s.style.backgroundImage = `url('${s.dataset.bg}')`;
+    }
+  }
+
+  function preloadNext(index) {
+    const next = (index + 1) % slides.length;
+    loadSlide(next);
+  }
+
+  // Load first slide, hide loader once it's ready
+  loadSlide(0);
+  const firstImg = new Image();
+  firstImg.onload = () => { loader.style.display = 'none'; };
+  firstImg.src = slides[0].dataset.bg;
 
   function nextSlide() {
     slides[slideIndex].classList.remove('active');
     slideIndex = (slideIndex + 1) % slides.length;
+    loadSlide(slideIndex);
     slides[slideIndex].classList.add('active');
+    preloadNext(slideIndex);
   }
 
   // ── Audio — single element, swap src per track ──────────
