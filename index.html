@@ -45,22 +45,8 @@
       inset: 0;
       z-index: 25;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: clamp(16px, 3vw, 32px);
-      transition: opacity 0.4s ease;
-    }
-
-    #intro h1 {
-      font-family: 'Cossette Titre', serif;
-      font-size: clamp(1.5rem, 13vw, 200px);
-      font-weight: 400;
-      color: #fff;
-      line-height: 1;
-      letter-spacing: -0.01em;
-      text-align: center;
-      padding: 0 4vw;
     }
 
     #play-btn {
@@ -73,6 +59,7 @@
       padding: clamp(4px, 0.6vw, 7px) clamp(14px, 2vw, 24px);
       cursor: pointer;
       transition: background 0.25s, color 0.25s;
+      -webkit-tap-highlight-color: transparent;
     }
 
     #play-btn.inverted {
@@ -88,6 +75,7 @@
       white-space: nowrap;
       top: 0; left: 0;
       display: none;
+      will-change: transform;
     }
 
     #heading h1 {
@@ -99,7 +87,6 @@
       letter-spacing: -0.01em;
       text-shadow: 0 2px 60px rgba(0,0,0,0.4);
     }
-
   </style>
 </head>
 <body>
@@ -124,7 +111,6 @@
 
 <div id="heading"><h1>hitsfromthebong</h1></div>
 
-
 <script>
   // ── Slides ─────────────────────────────────────────────
   const slides = document.querySelectorAll('.slide');
@@ -136,59 +122,65 @@
     slides[slideIndex].classList.add('active');
   }
 
-  // ── Sounds ─────────────────────────────────────────────
-  const sounds = [1,2,3,4,5,6,7,8,9].map(i => {
-    const a = new Audio(`sounds/${i}.mp3`);
-    a.preload = 'auto';
-    return a;
-  });
+  // ── Audio — single element, swap src per track ──────────
+  // iOS Safari only unlocks the specific Audio object played
+  // during a user gesture. One element avoids that constraint.
+  const trackSrcs = [1,2,3,4,5,6,7,8,9].map(i => `sounds/${i}.mp3`);
+  const audio = new Audio();
+  audio.preload = 'none';
   let soundIndex = 0;
-  let muted = false;
-  let currentSound = null;
 
   function playNextSound() {
-    if (currentSound) {
-      currentSound.pause();
-      currentSound.currentTime = 0;
-    }
-    currentSound = sounds[soundIndex % sounds.length];
+    audio.pause();
+    audio.src = trackSrcs[soundIndex % trackSrcs.length];
     soundIndex++;
-    currentSound.muted = muted;
-    currentSound.currentTime = 0;
-    currentSound.play().catch(() => {});
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
   }
 
+  // Pause when phone locks / tab hidden, resume on return
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      audio.pause();
+    } else if (bouncing) {
+      audio.play().catch(() => {});
+    }
+  });
 
   // ── DVD bounce ─────────────────────────────────────────
   const el = document.getElementById('heading');
   const SPEED = window.innerWidth < 768 ? 3.5 * 0.7 : 3.5;
   let x, y, vx, vy;
   let bouncing = false;
+  // Cache dimensions — only remeasure on resize, not every frame
+  let elW = 0, elH = 0;
 
   function initBounce() {
-    const maxX = window.innerWidth  - el.offsetWidth;
-    const maxY = window.innerHeight - el.offsetHeight;
+    elW = el.offsetWidth;
+    elH = el.offsetHeight;
+    const maxX = window.innerWidth  - elW;
+    const maxY = window.innerHeight - elH;
     x = Math.max(0, maxX / 2);
     y = Math.max(0, maxY / 2);
     vx = SPEED * (Math.random() < 0.5 ? 1 : -1);
     vy = SPEED * (Math.random() < 0.5 ? 1 : -1);
-    el.style.transform = `translate(${x}px, ${y}px)`;
+    el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
   }
 
   function bounce() {
     if (!bouncing) return;
-    const maxX = window.innerWidth  - el.offsetWidth;
-    const maxY = window.innerHeight - el.offsetHeight;
+    const maxX = window.innerWidth - elW;
+    const maxY = window.innerHeight - elH;
 
     x += vx;
     y += vy;
 
-    if (x <= 0)      { x = 0;    vx = Math.abs(vx);  onBounce(); }
-    if (x >= maxX)   { x = maxX; vx = -Math.abs(vx); onBounce(); }
-    if (y <= 0)      { y = 0;    vy = Math.abs(vy);  onBounce(); }
-    if (y >= maxY)   { y = maxY; vy = -Math.abs(vy); onBounce(); }
+    if (x <= 0)    { x = 0;    vx = Math.abs(vx);  onBounce(); }
+    if (x >= maxX) { x = maxX; vx = -Math.abs(vx); onBounce(); }
+    if (y <= 0)    { y = 0;    vy = Math.abs(vy);  onBounce(); }
+    if (y >= maxY) { y = maxY; vy = -Math.abs(vy); onBounce(); }
 
-    el.style.transform = `translate(${x}px, ${y}px)`;
+    el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
     requestAnimationFrame(bounce);
   }
 
@@ -197,16 +189,10 @@
     playNextSound();
   }
 
-  window.addEventListener('resize', () => { if (bouncing) initBounce(); });
-
-  // Pause audio when phone locks or tab is hidden, resume on return
-  document.addEventListener('visibilitychange', () => {
-    if (!currentSound) return;
-    if (document.hidden) {
-      currentSound.pause();
-    } else if (bouncing && !muted) {
-      currentSound.play().catch(() => {});
-    }
+  window.addEventListener('resize', () => {
+    elW = el.offsetWidth;
+    elH = el.offsetHeight;
+    if (bouncing) initBounce();
   });
 
   // ── PLAY button ─────────────────────────────────────────
@@ -214,24 +200,28 @@
   const playBtn = document.getElementById('play-btn');
 
   document.fonts.ready.then(() => {
-    initBounce(); // pre-measure so bounce starts from centre instantly
+    // Pre-measure while hidden so initBounce() is accurate on click
+    el.style.visibility = 'hidden';
+    el.style.display    = 'block';
+    elW = el.offsetWidth;
+    elH = el.offsetHeight;
+    el.style.display    = 'none';
+    el.style.visibility = '';
 
     playBtn.addEventListener('click', () => {
       playBtn.classList.add('inverted');
 
+      // Play audio synchronously inside the gesture — iOS requires this
+      playNextSound();
+
+      // Small visual pause for the invert, then cut to bounce
       setTimeout(() => {
-        // Instantly hide intro, instantly show text
         intro.style.display = 'none';
         initBounce();
         el.style.display = 'block';
-
-        // Start audio immediately (user gesture just happened)
-        playNextSound();
-
-        // Start bounce
         bouncing = true;
         requestAnimationFrame(bounce);
-      }, 250);
+      }, 200);
     });
   });
 </script>
