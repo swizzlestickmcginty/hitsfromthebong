@@ -105,6 +105,41 @@
     if (Math.abs(dx) > 50) dx < 0 ? goTo(current + 1) : goTo(current - 1);
   });
 
+  // ── Sounds ────────────────────────────────────────────
+  const soundFiles = [1,2,3,4,5,6,7,8,9].map(i => {
+    const a = new Audio(`sounds/${i}.mp3`);
+    a.preload = 'auto';
+    return a;
+  });
+  let soundIndex = 0;
+
+  // Unlock audio on first user interaction (required by browsers)
+  let audioUnlocked = false;
+  function unlockAudio() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    // Play and immediately pause each track to prime them
+    soundFiles.forEach(a => { a.play().then(() => a.pause()).catch(() => {}); });
+    // Play the first sound immediately
+    soundFiles[0].currentTime = 0;
+    soundFiles[0].play().catch(() => {});
+    soundIndex = 1;
+    document.removeEventListener('click', unlockAudio);
+    document.removeEventListener('touchstart', unlockAudio);
+    document.removeEventListener('keydown', unlockAudio);
+  }
+  document.addEventListener('click', unlockAudio);
+  document.addEventListener('touchstart', unlockAudio);
+  document.addEventListener('keydown', unlockAudio);
+
+  function playNext() {
+    if (!audioUnlocked) return;
+    const s = soundFiles[soundIndex % soundFiles.length];
+    s.currentTime = 0;
+    s.play().catch(() => {});
+    soundIndex++;
+  }
+
   // ── DVD bounce ─────────────────────────────────────────
   const el = document.getElementById('heading');
 
@@ -137,10 +172,10 @@
     x += vx;
     y += vy;
 
-    if (x <= 0)      { x = 0;    vx = Math.abs(vx); }
-    if (x >= maxX)   { x = maxX; vx = -Math.abs(vx); }
-    if (y <= 0)      { y = 0;    vy = Math.abs(vy); }
-    if (y >= maxY)   { y = maxY; vy = -Math.abs(vy); }
+    if (x <= 0)      { x = 0;    vx = Math.abs(vx);  playNext(); }
+    if (x >= maxX)   { x = maxX; vx = -Math.abs(vx); playNext(); }
+    if (y <= 0)      { y = 0;    vy = Math.abs(vy);  playNext(); }
+    if (y >= maxY)   { y = maxY; vy = -Math.abs(vy); playNext(); }
 
     el.style.transform = `translate(${x}px, ${y}px)`;
     requestAnimationFrame(bounce);
