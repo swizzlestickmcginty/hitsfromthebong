@@ -66,35 +66,18 @@
     #play-btn {
       font-family: 'Cossette Titre', serif;
       font-size: clamp(1.7rem, 4vw, 2.2rem);
-      letter-spacing: 0.3em;
+      letter-spacing: -0.01em;
       color: #fff;
       background: #000;
       border: none;
-      padding: clamp(8px, 1.2vw, 12px) clamp(24px, 4vw, 48px);
+      padding: clamp(4px, 0.6vw, 7px) clamp(14px, 2vw, 24px);
       cursor: pointer;
       transition: background 0.25s, color 0.25s;
-      animation: play-pulse 2s ease-in-out infinite;
     }
 
     #play-btn.inverted {
       background: #fff;
       color: #000;
-      animation: none;
-    }
-
-    #play-btn span {
-      display: inline-block;
-      animation: play-text-counter 2s ease-in-out infinite;
-    }
-
-    @keyframes play-pulse {
-      0%,100% { transform: scaleX(1)    scaleY(1); }
-      50%     { transform: scaleX(3)    scaleY(2); }
-    }
-
-    @keyframes play-text-counter {
-      0%,100% { transform: scaleX(1)     scaleY(1); }
-      50%     { transform: scaleX(0.333) scaleY(0.5); }
     }
 
     /* ── Bouncing heading ──────────────────────────────── */
@@ -104,7 +87,7 @@
       pointer-events: none;
       white-space: nowrap;
       top: 0; left: 0;
-      opacity: 0;
+      display: none;
     }
 
     #heading h1 {
@@ -227,13 +210,10 @@
       playBtn.classList.add('inverted');
 
       setTimeout(() => {
-        // Hide intro
-        intro.style.opacity = '0';
-        intro.style.pointerEvents = 'none';
-
-        // Position exactly at centre then reveal
+        // Instantly hide intro, instantly show text
+        intro.style.display = 'none';
         initBounce();
-        el.style.opacity = '1';
+        el.style.display = 'block';
 
         // Start audio immediately (user gesture just happened)
         playNextSound();
@@ -241,8 +221,6 @@
         // Start bounce
         bouncing = true;
         requestAnimationFrame(bounce);
-
-        setTimeout(() => { intro.style.display = 'none'; }, 400);
       }, 250);
     });
   });
