@@ -39,12 +39,73 @@
       z-index: 10;
     }
 
+    /* ── Intro screen ──────────────────────────────────── */
+    #intro {
+      position: fixed;
+      inset: 0;
+      z-index: 25;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(16px, 3vw, 32px);
+      transition: opacity 0.4s ease;
+    }
+
+    #intro h1 {
+      font-family: 'Cossette Titre', serif;
+      font-size: clamp(1.5rem, 13vw, 200px);
+      font-weight: 400;
+      color: #fff;
+      line-height: 1;
+      letter-spacing: -0.01em;
+      text-align: center;
+      padding: 0 4vw;
+    }
+
+    #play-btn {
+      font-family: 'Cossette Titre', serif;
+      font-size: clamp(0.85rem, 2vw, 1.1rem);
+      letter-spacing: 0.3em;
+      color: #fff;
+      background: #000;
+      border: 1px solid rgba(255,255,255,0.5);
+      padding: clamp(8px, 1.2vw, 12px) clamp(24px, 4vw, 48px);
+      cursor: pointer;
+      transition: background 0.25s, color 0.25s, border-color 0.25s;
+      animation: play-pulse 2s ease-in-out infinite;
+    }
+
+    #play-btn.inverted {
+      background: #fff;
+      color: #000;
+      border-color: #fff;
+      animation: none;
+    }
+
+    #play-btn span {
+      display: inline-block;
+      animation: play-text-counter 2s ease-in-out infinite;
+    }
+
+    @keyframes play-pulse {
+      0%,100% { transform: scaleX(1); }
+      50%     { transform: scaleX(3); }
+    }
+
+    @keyframes play-text-counter {
+      0%,100% { transform: scaleX(1); }
+      50%     { transform: scaleX(0.333); }
+    }
+
+    /* ── Bouncing heading ──────────────────────────────── */
     #heading {
       position: fixed;
       z-index: 20;
       pointer-events: none;
       white-space: nowrap;
       top: 0; left: 0;
+      opacity: 0;
     }
 
     #heading h1 {
@@ -57,54 +118,6 @@
       text-shadow: 0 2px 60px rgba(0,0,0,0.4);
     }
 
-    /* ── Mute button ───────────────────────────────────── */
-    #mute-btn {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 30;
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: rgba(15, 15, 15, 0.55);
-      backdrop-filter: blur(20px) saturate(160%);
-      -webkit-backdrop-filter: blur(20px) saturate(160%);
-      box-shadow:
-        0 4px 24px rgba(0,0,0,0.45),
-        0 1px 0 rgba(255,255,255,0.08) inset,
-        0 -1px 0 rgba(0,0,0,0.3) inset;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s, transform 0.15s;
-      animation: liquid-pulse 2s ease-in-out infinite;
-    }
-
-    #mute-btn:hover {
-      background: rgba(30, 30, 30, 0.7);
-      transform: scale(1.06);
-    }
-
-    #mute-btn:active { transform: scale(0.95); }
-
-    #mute-btn svg {
-      width: 22px;
-      height: 22px;
-      color: #fff;
-      flex-shrink: 0;
-    }
-
-    #mute-btn.unlocked {
-      animation: none;
-    }
-
-    @keyframes liquid-pulse {
-      0%   { box-shadow: 0 4px 24px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.08) inset, 0 0 0 0 rgba(255,255,255,0.35); }
-      60%  { box-shadow: 0 4px 24px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.08) inset, 0 0 0 14px rgba(255,255,255,0); }
-      100% { box-shadow: 0 4px 24px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.08) inset, 0 0 0 0 rgba(255,255,255,0); }
-    }
   </style>
 </head>
 <body>
@@ -122,22 +135,14 @@
 </div>
 
 <div id="overlay"></div>
+
+<div id="intro">
+  <h1>hitsfromthebong</h1>
+  <button id="play-btn"><span>PLAY</span></button>
+</div>
+
 <div id="heading"><h1>hitsfromthebong</h1></div>
 
-<button id="mute-btn" aria-label="Unmute">
-  <!-- Sound on icon -->
-  <svg id="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-  </svg>
-  <!-- Muted icon (hidden by default) -->
-  <svg id="icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
-    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-    <line x1="23" y1="9" x2="17" y2="15"/>
-    <line x1="17" y1="9" x2="23" y2="15"/>
-  </svg>
-</button>
 
 <script>
   // ── Slides ─────────────────────────────────────────────
@@ -157,7 +162,7 @@
     return a;
   });
   let soundIndex = 0;
-  let muted = true;
+  let muted = false;
   let currentSound = null;
 
   function playNextSound() {
@@ -172,48 +177,25 @@
     currentSound.play().catch(() => {});
   }
 
-  // Start playing immediately, muted — browsers allow muted autoplay
-  playNextSound();
-
-  const btn    = document.getElementById('mute-btn');
-  const iconOn  = document.getElementById('icon-on');
-  const iconOff = document.getElementById('icon-off');
-
-  // Button starts showing muted icon + pulse, first click unmutes
-  iconOn.style.display  = 'none';
-  iconOff.style.display = '';
-
-  btn.addEventListener('click', () => {
-    muted = !muted;
-    if (currentSound) currentSound.muted = muted;
-    iconOn.style.display  = muted ? 'none' : '';
-    iconOff.style.display = muted ? ''     : 'none';
-    btn.setAttribute('aria-label', muted ? 'Unmute' : 'Mute');
-    if (!muted) btn.classList.add('unlocked');
-    else btn.classList.remove('unlocked');
-  });
-
-  // Called on every wall hit — advances both sound and bg in sync
-  function onBounce() {
-    nextSlide();
-    playNextSound();
-  }
 
   // ── DVD bounce ─────────────────────────────────────────
   const el = document.getElementById('heading');
   const SPEED = 3.5;
   let x, y, vx, vy;
+  let bouncing = false;
 
-  function init() {
+  function initBounce() {
     const maxX = window.innerWidth  - el.offsetWidth;
     const maxY = window.innerHeight - el.offsetHeight;
     x = Math.max(0, maxX / 2);
     y = Math.max(0, maxY / 2);
     vx = SPEED * (Math.random() < 0.5 ? 1 : -1);
     vy = SPEED * (Math.random() < 0.5 ? 1 : -1);
+    el.style.transform = `translate(${x}px, ${y}px)`;
   }
 
   function bounce() {
+    if (!bouncing) return;
     const maxX = window.innerWidth  - el.offsetWidth;
     const maxY = window.innerHeight - el.offsetHeight;
 
@@ -229,12 +211,43 @@
     requestAnimationFrame(bounce);
   }
 
-  document.fonts.ready.then(() => {
-    init();
-    requestAnimationFrame(bounce);
-  });
+  function onBounce() {
+    nextSlide();
+    playNextSound();
+  }
 
-  window.addEventListener('resize', init);
+  window.addEventListener('resize', () => { if (bouncing) initBounce(); });
+
+  // ── PLAY button ─────────────────────────────────────────
+  const intro   = document.getElementById('intro');
+  const playBtn = document.getElementById('play-btn');
+
+  document.fonts.ready.then(() => {
+    initBounce(); // pre-measure so bounce starts from centre instantly
+
+    playBtn.addEventListener('click', () => {
+      playBtn.classList.add('inverted');
+
+      setTimeout(() => {
+        // Hide intro
+        intro.style.opacity = '0';
+        intro.style.pointerEvents = 'none';
+
+        // Position exactly at centre then reveal
+        initBounce();
+        el.style.opacity = '1';
+
+        // Start audio immediately (user gesture just happened)
+        playNextSound();
+
+        // Start bounce
+        bouncing = true;
+        requestAnimationFrame(bounce);
+
+        setTimeout(() => { intro.style.display = 'none'; }, 400);
+      }, 250);
+    });
+  });
 </script>
 </body>
 </html>
