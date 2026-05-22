@@ -26,10 +26,10 @@
       inset: 0;
       background-size: cover;
       background-position: center;
-      display: none;
+      z-index: 0;
     }
 
-    .slide.active { display: block; }
+    .slide.active { z-index: 1; }
 
     #overlay {
       position: fixed;
@@ -161,7 +161,7 @@
 
   // ── DVD bounce ─────────────────────────────────────────
   const el = document.getElementById('heading');
-  const SPEED = 3.5;
+  const SPEED = window.innerWidth < 768 ? 3.5 * 0.7 : 3.5;
   let x, y, vx, vy;
   let bouncing = false;
 
