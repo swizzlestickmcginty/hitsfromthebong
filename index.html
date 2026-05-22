@@ -157,39 +157,46 @@
     return a;
   });
   let soundIndex = 0;
-  let audioUnlocked = false;
-  let muted = false;
+  let muted = true;
+  let currentSound = null;
 
-  const btn       = document.getElementById('mute-btn');
-  const iconOn    = document.getElementById('icon-on');
-  const iconOff   = document.getElementById('icon-off');
-
-  function unlockAudio() {
-    if (audioUnlocked) return;
-    audioUnlocked = true;
-    btn.classList.add('unlocked');
-    btn.setAttribute('aria-label', 'Mute');
+  function playNextSound() {
+    if (currentSound) {
+      currentSound.pause();
+      currentSound.currentTime = 0;
+    }
+    currentSound = sounds[soundIndex % sounds.length];
+    soundIndex++;
+    currentSound.muted = muted;
+    currentSound.currentTime = 0;
+    currentSound.play().catch(() => {});
   }
 
+  // Start playing immediately, muted — browsers allow muted autoplay
+  playNextSound();
+
+  const btn    = document.getElementById('mute-btn');
+  const iconOn  = document.getElementById('icon-on');
+  const iconOff = document.getElementById('icon-off');
+
+  // Button starts showing muted icon + pulse, first click unmutes
+  iconOn.style.display  = 'none';
+  iconOff.style.display = '';
+
   btn.addEventListener('click', () => {
-    if (!audioUnlocked) {
-      unlockAudio();
-      return;
-    }
     muted = !muted;
-    iconOn.style.display  = muted ? 'none'  : '';
-    iconOff.style.display = muted ? ''      : 'none';
+    if (currentSound) currentSound.muted = muted;
+    iconOn.style.display  = muted ? 'none' : '';
+    iconOff.style.display = muted ? ''     : 'none';
     btn.setAttribute('aria-label', muted ? 'Unmute' : 'Mute');
+    if (!muted) btn.classList.add('unlocked');
+    else btn.classList.remove('unlocked');
   });
 
   // Called on every wall hit — advances both sound and bg in sync
   function onBounce() {
     nextSlide();
-    if (!audioUnlocked || muted) return;
-    const s = sounds[soundIndex % sounds.length];
-    s.currentTime = 0;
-    s.play().catch(() => {});
-    soundIndex++;
+    playNextSound();
   }
 
   // ── DVD bounce ─────────────────────────────────────────
