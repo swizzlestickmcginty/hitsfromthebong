@@ -154,28 +154,43 @@
     preloadNext(slideIndex);
   }
 
-  // ── Audio — single element, swap src per track ──────────
-  // iOS Safari only unlocks the specific Audio object played
-  // during a user gesture. One element avoids that constraint.
+  // ── Audio — double buffer for zero-gap playback ─────────
+  // Two elements take turns: while one plays, the other preloads
+  // the next track so the swap is instant.
   const trackSrcs = [1,2,3,4,5,6,7,8,9].map(i => `sounds/${i}.mp3`);
-  const audio = new Audio();
-  audio.preload = 'none';
-  let soundIndex = 0;
+  const buffers = [new Audio(), new Audio()];
+  let activeSlot = 0;
+  let preloadIdx = 2;
+  let isFirstPlay = true;
+
+  // Preload first two tracks immediately (no gesture needed for load())
+  buffers[0].src = trackSrcs[0]; buffers[0].load();
+  buffers[1].src = trackSrcs[1]; buffers[1].load();
 
   function playNextSound() {
-    audio.pause();
-    audio.src = trackSrcs[soundIndex % trackSrcs.length];
-    soundIndex++;
-    audio.currentTime = 0;
-    audio.play().catch(() => {});
+    if (isFirstPlay) {
+      isFirstPlay = false;
+      buffers[0].currentTime = 0;
+      buffers[0].play().catch(() => {});
+      return;
+    }
+    buffers[activeSlot].pause();
+    activeSlot = 1 - activeSlot;
+    buffers[activeSlot].currentTime = 0;
+    buffers[activeSlot].play().catch(() => {});
+    // Preload next into the now-idle slot
+    const idle = 1 - activeSlot;
+    buffers[idle].src = trackSrcs[preloadIdx % trackSrcs.length];
+    buffers[idle].load();
+    preloadIdx++;
   }
 
   // Pause when phone locks / tab hidden, resume on return
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-      audio.pause();
+      buffers[activeSlot].pause();
     } else if (bouncing) {
-      audio.play().catch(() => {});
+      buffers[activeSlot].play().catch(() => {});
     }
   });
 
