@@ -26,15 +26,11 @@
       inset: 0;
       background-size: cover;
       background-position: center;
-      opacity: 0;
-      transform: scale(1.04);
-      transition: opacity 1.2s ease-in-out, transform 8s ease-out;
-      will-change: opacity, transform;
+      display: none;
     }
 
     .slide.active {
-      opacity: 1;
-      transform: scale(1);
+      display: block;
     }
 
     #overlay {
@@ -50,7 +46,6 @@
       z-index: 20;
       pointer-events: none;
       white-space: nowrap;
-      /* position set by JS */
       top: 0; left: 0;
     }
 
@@ -68,61 +63,46 @@
 <body>
 
 <div id="slideshow">
-  <div class="slide active" style="background-image: url('images/1.gif'); background-color: #1a1a2e;"></div>
-  <div class="slide"        style="background-image: url('images/2.jpg'); background-color: #16213e;"></div>
-  <div class="slide"        style="background-image: url('images/3.png'); background-color: #0f3460;"></div>
-  <div class="slide"        style="background-image: url('images/4.jpg'); background-color: #1b1b2f;"></div>
-  <div class="slide"        style="background-image: url('images/5.jpg'); background-color: #1a1a2e;"></div>
-  <div class="slide"        style="background-image: url('images/6.jpg'); background-color: #16213e;"></div>
+  <div class="slide active" style="background-image: url('images/1.gif');"></div>
+  <div class="slide"        style="background-image: url('images/2.jpg');"></div>
+  <div class="slide"        style="background-image: url('images/3.png');"></div>
+  <div class="slide"        style="background-image: url('images/4.jpg');"></div>
+  <div class="slide"        style="background-image: url('images/5.jpg');"></div>
+  <div class="slide"        style="background-image: url('images/6.jpg');"></div>
+  <div class="slide"        style="background-image: url('images/7.jpg');"></div>
+  <div class="slide"        style="background-image: url('images/8.jpg');"></div>
+  <div class="slide"        style="background-image: url('images/9.jpg');"></div>
 </div>
 
 <div id="overlay"></div>
-
 <div id="heading"><h1>hitsfromthebong</h1></div>
 
 <script>
-  // ── Slideshow ──────────────────────────────────────────
+  // ── Slides ─────────────────────────────────────────────
   const slides = document.querySelectorAll('.slide');
-  let current = 0;
+  let slideIndex = 0;
 
-  function goTo(index) {
-    slides[current].classList.remove('active');
-    current = (index + slides.length) % slides.length;
-    slides[current].classList.add('active');
+  function nextSlide() {
+    slides[slideIndex].classList.remove('active');
+    slideIndex = (slideIndex + 1) % slides.length;
+    slides[slideIndex].classList.add('active');
   }
 
-  setInterval(() => goTo(current + 1), 5000);
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(current + 1);
-    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   goTo(current - 1);
-  });
-
-  let touchStartX = 0;
-  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
-  document.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    if (Math.abs(dx) > 50) dx < 0 ? goTo(current + 1) : goTo(current - 1);
-  });
-
-  // ── Sounds ────────────────────────────────────────────
-  const soundFiles = [1,2,3,4,5,6,7,8,9].map(i => {
+  // ── Sounds ─────────────────────────────────────────────
+  const sounds = [1,2,3,4,5,6,7,8,9].map(i => {
     const a = new Audio(`sounds/${i}.mp3`);
     a.preload = 'auto';
     return a;
   });
   let soundIndex = 0;
-
-  // Unlock audio on first user interaction (required by browsers)
   let audioUnlocked = false;
+
   function unlockAudio() {
     if (audioUnlocked) return;
     audioUnlocked = true;
-    // Play and immediately pause each track to prime them
-    soundFiles.forEach(a => { a.play().then(() => a.pause()).catch(() => {}); });
-    // Play the first sound immediately
-    soundFiles[0].currentTime = 0;
-    soundFiles[0].play().catch(() => {});
+    sounds.forEach(a => { a.play().then(() => a.pause()).catch(() => {}); });
+    sounds[0].currentTime = 0;
+    sounds[0].play().catch(() => {});
     soundIndex = 1;
     document.removeEventListener('click', unlockAudio);
     document.removeEventListener('touchstart', unlockAudio);
@@ -132,9 +112,11 @@
   document.addEventListener('touchstart', unlockAudio);
   document.addEventListener('keydown', unlockAudio);
 
-  function playNext() {
+  // Called on every wall hit — advances both sound and bg in sync
+  function onBounce() {
+    nextSlide();
     if (!audioUnlocked) return;
-    const s = soundFiles[soundIndex % soundFiles.length];
+    const s = sounds[soundIndex % sounds.length];
     s.currentTime = 0;
     s.play().catch(() => {});
     soundIndex++;
@@ -142,52 +124,39 @@
 
   // ── DVD bounce ─────────────────────────────────────────
   const el = document.getElementById('heading');
-
-  // Speed in px/frame — feels natural on both desktop and mobile
   const SPEED = 1.5;
   let x, y, vx, vy;
 
   function init() {
-    // Measure element after fonts load
-    const w = el.offsetWidth;
-    const h = el.offsetHeight;
-    const maxX = window.innerWidth  - w;
-    const maxY = window.innerHeight - h;
-
-    // Start roughly centred
+    const maxX = window.innerWidth  - el.offsetWidth;
+    const maxY = window.innerHeight - el.offsetHeight;
     x = Math.max(0, maxX / 2);
     y = Math.max(0, maxY / 2);
-
-    // Random diagonal direction
     vx = SPEED * (Math.random() < 0.5 ? 1 : -1);
     vy = SPEED * (Math.random() < 0.5 ? 1 : -1);
   }
 
   function bounce() {
-    const w = el.offsetWidth;
-    const h = el.offsetHeight;
-    const maxX = window.innerWidth  - w;
-    const maxY = window.innerHeight - h;
+    const maxX = window.innerWidth  - el.offsetWidth;
+    const maxY = window.innerHeight - el.offsetHeight;
 
     x += vx;
     y += vy;
 
-    if (x <= 0)      { x = 0;    vx = Math.abs(vx);  playNext(); }
-    if (x >= maxX)   { x = maxX; vx = -Math.abs(vx); playNext(); }
-    if (y <= 0)      { y = 0;    vy = Math.abs(vy);  playNext(); }
-    if (y >= maxY)   { y = maxY; vy = -Math.abs(vy); playNext(); }
+    if (x <= 0)      { x = 0;    vx = Math.abs(vx);  onBounce(); }
+    if (x >= maxX)   { x = maxX; vx = -Math.abs(vx); onBounce(); }
+    if (y <= 0)      { y = 0;    vy = Math.abs(vy);  onBounce(); }
+    if (y >= maxY)   { y = maxY; vy = -Math.abs(vy); onBounce(); }
 
     el.style.transform = `translate(${x}px, ${y}px)`;
     requestAnimationFrame(bounce);
   }
 
-  // Wait for font to load before measuring, then start
   document.fonts.ready.then(() => {
     init();
     requestAnimationFrame(bounce);
   });
 
-  // Re-init on resize so bounds stay correct
   window.addEventListener('resize', init);
 </script>
 </body>
