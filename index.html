@@ -199,6 +199,16 @@
 
   window.addEventListener('resize', () => { if (bouncing) initBounce(); });
 
+  // Pause audio when phone locks or tab is hidden, resume on return
+  document.addEventListener('visibilitychange', () => {
+    if (!currentSound) return;
+    if (document.hidden) {
+      currentSound.pause();
+    } else if (bouncing && !muted) {
+      currentSound.play().catch(() => {});
+    }
+  });
+
   // ── PLAY button ─────────────────────────────────────────
   const intro   = document.getElementById('intro');
   const playBtn = document.getElementById('play-btn');
