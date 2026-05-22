@@ -3,22 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hits from the b.ong</title>
+  <title>hitsfromthebong</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cossette+Titre&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --transition-speed: 1.2s;
-    }
 
     html, body {
       width: 100%; height: 100%;
       background: #000;
       overflow: hidden;
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     }
 
-    /* ── Slideshow ─────────────────────────────────────── */
     #slideshow {
       position: fixed;
       inset: 0;
@@ -30,10 +27,8 @@
       background-size: cover;
       background-position: center;
       opacity: 0;
-      transition: opacity var(--transition-speed) ease-in-out;
       transform: scale(1.04);
-      transition: opacity var(--transition-speed) ease-in-out,
-                  transform 8s ease-out;
+      transition: opacity 1.2s ease-in-out, transform 8s ease-out;
       will-change: opacity, transform;
     }
 
@@ -42,99 +37,37 @@
       transform: scale(1);
     }
 
-    /* ── Overlay ────────────────────────────────────────── */
     #overlay {
       position: fixed;
       inset: 0;
-      background: linear-gradient(
-        to bottom,
-        rgba(0,0,0,0.15) 0%,
-        rgba(0,0,0,0.0) 40%,
-        rgba(0,0,0,0.5) 100%
-      );
+      background: rgba(0,0,0,0.25);
       pointer-events: none;
       z-index: 10;
     }
 
-    /* ── Title ──────────────────────────────────────────── */
-    #title {
+    #heading {
       position: fixed;
-      bottom: 10vh;
-      left: 0; right: 0;
-      text-align: center;
       z-index: 20;
+      pointer-events: none;
+      white-space: nowrap;
+      /* position set by JS */
+      top: 0; left: 0;
+    }
+
+    #heading h1 {
+      font-family: 'Cossette Titre', serif;
+      font-size: clamp(1.5rem, 13vw, 200px);
+      font-weight: 400;
       color: #fff;
-      letter-spacing: 0.18em;
-      text-transform: lowercase;
-      user-select: none;
-    }
-
-    #title h1 {
-      font-size: clamp(1.8rem, 6vw, 5rem);
-      font-weight: 200;
-      text-shadow: 0 2px 40px rgba(0,0,0,0.6);
-      opacity: 0;
-      transform: translateY(12px);
-      animation: fadeUp 1.4s 0.4s forwards ease-out;
-    }
-
-    #title p {
-      margin-top: 0.6em;
-      font-size: clamp(0.75rem, 1.8vw, 1.1rem);
-      font-weight: 300;
-      letter-spacing: 0.28em;
-      opacity: 0;
-      transform: translateY(8px);
-      animation: fadeUp 1.4s 0.9s forwards ease-out;
-      color: rgba(255,255,255,0.7);
-    }
-
-    @keyframes fadeUp {
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ── Dots ───────────────────────────────────────────── */
-    #dots {
-      position: fixed;
-      bottom: 5vh;
-      left: 0; right: 0;
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      z-index: 20;
-    }
-
-    .dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.35);
-      cursor: pointer;
-      transition: background 0.4s, transform 0.3s;
-    }
-
-    .dot.active {
-      background: #fff;
-      transform: scale(1.4);
-    }
-
-    /* ── Parallax on mouse move ─────────────────────────── */
-    #parallax-layer {
-      position: fixed;
-      inset: -3%;
-      z-index: 0;
-      transition: transform 0.12s linear;
+      line-height: 1;
+      letter-spacing: -0.01em;
+      text-shadow: 0 2px 60px rgba(0,0,0,0.4);
     }
   </style>
 </head>
 <body>
 
 <div id="slideshow">
-  <!--
-    Add your images here.
-    Replace the placeholder URLs with your own image paths, e.g.:
-      style="background-image: url('images/photo1.jpg')"
-    Drop your images into an /images/ folder next to this file.
-  -->
   <div class="slide active" style="background-image: url('images/1.gif'); background-color: #1a1a2e;"></div>
   <div class="slide"        style="background-image: url('images/2.jpg'); background-color: #16213e;"></div>
   <div class="slide"        style="background-image: url('images/3.png'); background-color: #0f3460;"></div>
@@ -145,70 +78,82 @@
 
 <div id="overlay"></div>
 
-<div id="title">
-  <h1>hits from the b.ong</h1>
-  <p>something's coming</p>
-</div>
-
-<div id="dots"></div>
+<div id="heading"><h1>hitsfromthebong</h1></div>
 
 <script>
+  // ── Slideshow ──────────────────────────────────────────
   const slides = document.querySelectorAll('.slide');
-  const dotsContainer = document.getElementById('dots');
   let current = 0;
-  let timer;
-
-  // Build dots
-  slides.forEach((_, i) => {
-    const d = document.createElement('div');
-    d.className = 'dot' + (i === 0 ? ' active' : '');
-    d.addEventListener('click', () => goTo(i));
-    dotsContainer.appendChild(d);
-  });
-
-  const dots = () => document.querySelectorAll('.dot');
 
   function goTo(index) {
     slides[current].classList.remove('active');
-    dots()[current].classList.remove('active');
     current = (index + slides.length) % slides.length;
     slides[current].classList.add('active');
-    dots()[current].classList.add('active');
-    resetTimer();
   }
 
-  function next() { goTo(current + 1); }
+  setInterval(() => goTo(current + 1), 5000);
 
-  function resetTimer() {
-    clearInterval(timer);
-    timer = setInterval(next, 5000);
-  }
-
-  resetTimer();
-
-  // Subtle mouse parallax
-  const slideshow = document.getElementById('slideshow');
-  document.addEventListener('mousemove', (e) => {
-    const cx = window.innerWidth / 2;
-    const cy = window.innerHeight / 2;
-    const dx = (e.clientX - cx) / cx;
-    const dy = (e.clientY - cy) / cy;
-    slideshow.style.transform = `translate(${dx * -8}px, ${dy * -6}px)`;
-  });
-
-  // Keyboard nav
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next();
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(current + 1);
     if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   goTo(current - 1);
   });
 
-  // Touch swipe
   let touchStartX = 0;
   document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
   document.addEventListener('touchend', e => {
     const dx = e.changedTouches[0].clientX - touchStartX;
-    if (Math.abs(dx) > 50) dx < 0 ? next() : goTo(current - 1);
+    if (Math.abs(dx) > 50) dx < 0 ? goTo(current + 1) : goTo(current - 1);
   });
+
+  // ── DVD bounce ─────────────────────────────────────────
+  const el = document.getElementById('heading');
+
+  // Speed in px/frame — feels natural on both desktop and mobile
+  const SPEED = 1.5;
+  let x, y, vx, vy;
+
+  function init() {
+    // Measure element after fonts load
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    const maxX = window.innerWidth  - w;
+    const maxY = window.innerHeight - h;
+
+    // Start roughly centred
+    x = Math.max(0, maxX / 2);
+    y = Math.max(0, maxY / 2);
+
+    // Random diagonal direction
+    vx = SPEED * (Math.random() < 0.5 ? 1 : -1);
+    vy = SPEED * (Math.random() < 0.5 ? 1 : -1);
+  }
+
+  function bounce() {
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    const maxX = window.innerWidth  - w;
+    const maxY = window.innerHeight - h;
+
+    x += vx;
+    y += vy;
+
+    if (x <= 0)      { x = 0;    vx = Math.abs(vx); }
+    if (x >= maxX)   { x = maxX; vx = -Math.abs(vx); }
+    if (y <= 0)      { y = 0;    vy = Math.abs(vy); }
+    if (y >= maxY)   { y = maxY; vy = -Math.abs(vy); }
+
+    el.style.transform = `translate(${x}px, ${y}px)`;
+    requestAnimationFrame(bounce);
+  }
+
+  // Wait for font to load before measuring, then start
+  document.fonts.ready.then(() => {
+    init();
+    requestAnimationFrame(bounce);
+  });
+
+  // Re-init on resize so bounds stay correct
+  window.addEventListener('resize', init);
 </script>
 </body>
 </html>
